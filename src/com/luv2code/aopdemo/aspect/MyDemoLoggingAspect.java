@@ -1,6 +1,9 @@
 package com.luv2code.aopdemo.aspect;
 
+import java.util.List;
+
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -23,7 +26,7 @@ public class MyDemoLoggingAspect {
 	}*/
 	
 	@Before("com.luv2code.aopdemo.aspect.LuvAopExpressions.forDaoPackageNoGetterSetter()")
-	public void beforeAddAccountAdvice(JoinPoint theJoinPoint) {
+	public void beforeAddAccountAdvice(JoinPoint theJoinPoint) {		
 		System.out.println("\n ======>>> Executing @Before advice on a method");
 		
 		MethodSignature methodSig = (MethodSignature) theJoinPoint.getSignature();
@@ -41,5 +44,21 @@ public class MyDemoLoggingAspect {
 				System.out.println("account level: " + theAccount.getLevel());
 			}
 		}
+	}
+	
+	@AfterReturning(
+			pointcut="execution(* com.luv2code.aopdemo.dao.AccountDAO.findAccounts(..))",
+			returning="result")
+	public void afterReturningFindAccountsAdvice(JoinPoint theJoinPoint, List<Account> result) {
+		String method = theJoinPoint.getSignature().toShortString();
+		System.out.println("\n ======>>> Executing @AfterReturning on method: " + method);
+		
+		System.out.println("\n ======>>> result is: " + result);
+		
+		result.forEach(
+				a -> a.setName(a.getName().toUpperCase())
+		);
+		
+		System.out.println("\n ======>>> result is: " + result);
 	}
 }
