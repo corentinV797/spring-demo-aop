@@ -15,11 +15,15 @@ public class MainDemoApp {
 		MembershipDAO theMembershipDAO = context.getBean("membershipDAO", MembershipDAO.class);
 		
 		theAccountDAO.addAccount(new Account(), true);
-		
 		theAccountDAO.doWork();
 		
-		theMembershipDAO.addSillyMember();
+		theAccountDAO.setName("foobar");
+		theAccountDAO.setServiceCode("silver");
 		
+		theAccountDAO.getName();
+		theAccountDAO.getServiceCode();
+		
+		theMembershipDAO.addSillyMember();
 		theMembershipDAO.goToSleep();
 		
 		
