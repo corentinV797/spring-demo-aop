@@ -1,11 +1,14 @@
 package com.luv2code.aopdemo.aspect;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -18,32 +21,34 @@ import com.luv2code.aopdemo.Account;
 @Component
 @Order(2)
 public class MyDemoLoggingAspect {
+	
+	private Logger myLogger = Logger.getLogger(getClass().getName());
 
 	//@Before("execution(public void add*())")
 	//@Before("execution(* add*(com.luv2code.aopdemo.Account, ..))")
 	//@Before("execution(* add*(..))")
 	/*@Before("execution(* com.luv2code.aopdemo.dao.*.*(..))")
 	public void beforeAddAccountAdvice() {
-		System.out.println("\n ======>>> Executing @Before advice on a method");
+		myLogger.info("\n ======>>> Executing @Before advice on a method");
 	}*/
 	
 	@Before("com.luv2code.aopdemo.aspect.LuvAopExpressions.forDaoPackageNoGetterSetter()")
 	public void beforeAddAccountAdvice(JoinPoint theJoinPoint) {		
-		System.out.println("\n ======>>> Executing @Before advice on a method");
+		myLogger.info("\n ======>>> Executing @Before advice on a method");
 		
 		MethodSignature methodSig = (MethodSignature) theJoinPoint.getSignature();
 		
-		System.out.println("Method: " + methodSig);
+		myLogger.info("Method: " + methodSig);
 		
 		Object[] args = theJoinPoint.getArgs();
 		
 		for (Object tempArg : args) {
-			System.out.println(tempArg);
+			myLogger.info(tempArg.toString());
 			if (tempArg instanceof Account) {
 				Account theAccount = (Account) tempArg;
 				
-				System.out.println("account name: " + theAccount.getName());
-				System.out.println("account level: " + theAccount.getLevel());
+				myLogger.info("account name: " + theAccount.getName());
+				myLogger.info("account level: " + theAccount.getLevel());
 			}
 		}
 	}
@@ -53,15 +58,15 @@ public class MyDemoLoggingAspect {
 			returning="result")
 	public void afterReturningFindAccountsAdvice(JoinPoint theJoinPoint, List<Account> result) {
 		String method = theJoinPoint.getSignature().toShortString();
-		System.out.println("\n ======>>> Executing @AfterReturning on method: " + method);
+		myLogger.info("\n ======>>> Executing @AfterReturning on method: " + method);
 		
-		System.out.println("\n ======>>> result is: " + result);
+		myLogger.info("\n ======>>> result is: " + result);
 		
 		result.forEach(
 				a -> a.setName(a.getName().toUpperCase())
 		);
 		
-		System.out.println("\n ======>>> result is: " + result);
+		myLogger.info("\n ======>>> result is: " + result);
 	}
 	
 	@AfterThrowing(pointcut="execution(* com.luv2code.aopdemo.dao.AccountDAO.findAccounts(..))",
@@ -70,9 +75,9 @@ public class MyDemoLoggingAspect {
 		
 		String method = theJoinPoint.getSignature().toShortString();
 		
-		System.out.println("\n ======>>> Executing @AfterThrowing on method: " + method);
+		myLogger.info("\n ======>>> Executing @AfterThrowing on method: " + method);
 		
-		System.out.println("\n ======>>> exception is: " + e);
+		myLogger.info("\n ======>>> exception is: " + e);
 		
 	}
 	
@@ -80,6 +85,29 @@ public class MyDemoLoggingAspect {
 	public void afterFinallyFindAccountsAdvice(JoinPoint theJoinPoint) {
 		String method = theJoinPoint.getSignature().toShortString();
 		
-		System.out.println("\n ======>>> Executing @After (finally) on method: " + method);
+		myLogger.info("\n ======>>> Executing @After (finally) on method: " + method);
+	}
+	
+	@Around("execution(* com.luv2code.aopdemo.service.*.getFortune(..))")
+	public Object aroundGetFortune(ProceedingJoinPoint theProceedingJoinPoint) throws Throwable {
+		String method = theProceedingJoinPoint.getSignature().toShortString();
+		myLogger.info("\n ======>>> Executing @Around on method: " + method);
+		
+		long begin = System.currentTimeMillis();
+		
+		Object result = null;
+		try {
+			result = theProceedingJoinPoint.proceed();
+		} catch (Throwable e) {
+			myLogger.warning(e.getMessage());
+			throw e;
+		}
+		
+		long end = System.currentTimeMillis();
+		long duration = end - begin;
+		
+		myLogger.info("\n ======>>> Duration: " + duration / 1000.0 + "seconds");
+		
+		return result;
 	}
 }
